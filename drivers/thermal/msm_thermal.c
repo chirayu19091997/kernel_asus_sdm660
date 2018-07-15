@@ -231,7 +231,7 @@ static LIST_HEAD(devices_list);
 static LIST_HEAD(thresholds_list);
 static int mitigation = 1;
 
-bool mitigation_thermal_core_control __read_mostly = false;
+static bool mitigation_thermal_cc = false;
 
 enum thermal_threshold {
 	HOTPLUG_THRESHOLD_HIGH,
@@ -519,6 +519,11 @@ static ssize_t thermal_config_debugfs_write(struct file *file,
 
 #define CXIP_LM_CLIENTS_STATUS()                                        \
 	readl_relaxed(cxip_lm_reg_base + CXIP_LM_VOTE_STATUS)
+
+bool mitigation_thermal_core_control(void)
+{
+	return mitigation_thermal_cc;
+}
 
 static void uio_init(struct platform_device *pdev)
 {
@@ -3646,9 +3651,9 @@ static void check_temp(struct work_struct *work)
 	do_cxip_lm();
 
 	if (temp >= msm_thermal_info.core_limit_temp_degC)
-		mitigation_thermal_core_control = true;
+		mitigation_thermal_cc = true;
 	else
-		mitigation_thermal_core_control = false;
+		mitigation_thermal_cc = false;
 
 	do_vdd_mx();
 	do_psm();
